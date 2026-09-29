@@ -1,0 +1,23 @@
+:root {
+  --color-bg: #FFF3D6;
+  --color-text: #382A26;
+  --color-primary: #3D7EFF;
+  --color-secondary: #F47B35;
+  --color-accent: #FFD23F;
+  --color-playful: #F47FA6;
+  --color-nature: #A8D94E;
+  --color-purple: #7657C8;
+  --color-navy: #1D0092;
+  --color-butter: #FFE9A8;
+  --color-cream: #FFF3D6;
+
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Space Grotesk', sans-serif;
+  --font-accent: 'Bungee', cursive;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
+
+  --shadow-card: 0 20px 40px rgba(29, 0, 146, 0.35);
+}

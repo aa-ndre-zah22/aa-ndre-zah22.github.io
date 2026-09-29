@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;0,900;1,600&family=Space+Grotesk:wght@400;500;600;700&family=Bungee&family=Kalam:wght@400;700&display=swap');
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--color-navy);
+  font-family: var(--font-body);
+  color: var(--color-cream);
+  overflow: hidden;
+}
+
+#app {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: none;
+}
+
+.screen.active {
+  display: block;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.nav {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48px;
+  z-index: 5;
+}
+
+.nav-logo {
+  height: 56px;
+  width: auto;
+  position: absolute;
+  top: 14px;
+  right: 48px;
+  z-index: 6;
+}
+
+button {
+  font-family: var(--font-accent);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.btn {
+  padding: 16px 34px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.btn-primary {
+  background: var(--color-secondary);
+  color: var(--color-navy);
+}
+
+.btn-accent {
+  background: var(--color-accent);
+  color: var(--color-navy);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--color-cream);
+  color: var(--color-cream);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+}

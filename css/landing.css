@@ -1,0 +1,133 @@
+.nav-links {
+  display: flex;
+  gap: 28px;
+  font-family: var(--font-accent);
+  font-size: 11px;
+  color: var(--color-accent);
+  padding-right: 140px;
+}
+
+.nav-signin {
+  cursor: pointer;
+  border-bottom: 2px solid var(--color-cream);
+  padding-bottom: 4px;
+}
+
+.landing-hero {
+  position: absolute;
+  top: 90px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  padding: 0 160px;
+  z-index: 2;
+}
+
+.landing-eyebrow {
+  font-family: var(--font-accent);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--color-nature);
+}
+
+.landing-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(28px, 4vw, 44px);
+  margin: 14px 0 0 0;
+  color: var(--color-cream);
+}
+
+.landing-sub {
+  font-size: 13px;
+  color: var(--color-cream);
+  opacity: 0.85;
+  max-width: 640px;
+  margin: 12px auto 0 auto;
+}
+
+.landing-cards {
+  position: absolute;
+  top: 300px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  z-index: 2;
+  padding: 0 140px;
+}
+
+.landing-card {
+  position: relative;
+  flex: 1;
+  max-width: 480px;
+  background: var(--color-navy);
+  border-radius: var(--radius-lg);
+  padding: 36px 40px;
+}
+
+.landing-card h2 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 26px;
+  color: var(--color-cream);
+  margin: 90px 0 8px 0;
+}
+
+.landing-card p {
+  font-size: 12px;
+  color: var(--color-cream);
+  opacity: 0.75;
+  margin: 0 0 24px 0;
+  max-width: 320px;
+}
+
+.landing-badge {
+  position: absolute;
+  top: 24px;
+  right: 40px;
+  font-size: 9px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+
+.landing-badge-outline {
+  border: 1px solid var(--color-nature);
+  color: var(--color-nature);
+}
+
+.landing-badge-solid {
+  background: var(--color-secondary);
+  color: var(--color-navy);
+}
+
+.landing-icon {
+  position: absolute;
+  top: 36px;
+  left: 40px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+}
+
+.landing-icon-map {
+  background: var(--color-nature);
+  border: 2px dashed var(--color-nature);
+  box-shadow: 0 0 0 20px transparent;
+  outline: 2px dashed var(--color-nature);
+  outline-offset: 22px;
+}
+
+.landing-icon-build {
+  background: var(--color-secondary);
+  border: 2px solid var(--color-secondary);
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 22px;
+}
+
+.landing-card button {
+  width: 100%;
+}

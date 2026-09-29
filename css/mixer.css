@@ -1,0 +1,206 @@
+.mixer-step {
+  position: absolute;
+  top: 26px; left: 56px;
+  font-size: 12px;
+  color: var(--color-nature);
+  z-index: 2;
+}
+
+.mixer-title {
+  position: absolute;
+  top: 60px; left: 56px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 30px;
+  color: var(--color-cream);
+  margin: 0;
+  z-index: 2;
+}
+
+.mixer-sub {
+  position: absolute;
+  top: 104px; left: 56px;
+  font-size: 13px;
+  color: var(--color-nature);
+  margin: 0;
+  z-index: 2;
+}
+
+.mixer-grid {
+  position: absolute;
+  top: 150px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(90vw, 980px);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 40px 32px;
+  z-index: 2;
+}
+
+.mixer-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.mixer-disc {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--color-navy);
+  border: 2px solid var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mixer-disc::before {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,243,214,0.18);
+}
+
+.mixer-tile:hover .mixer-disc {
+  transform: translateY(-3px);
+}
+
+.mixer-tile-active .mixer-disc {
+  box-shadow: 0 0 0 4px var(--color-secondary);
+}
+
+.mixer-icon {
+  width: 58%;
+  height: 58%;
+  object-fit: contain;
+  position: relative;
+  z-index: 1;
+}
+
+.mixer-badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-navy);
+  font-size: 12px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.mixer-tile-active .mixer-badge {
+  display: flex;
+}
+
+.mixer-tile-label {
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--color-cream);
+  text-align: center;
+}
+
+.mixer-disc-dashed {
+  background: transparent;
+  border: 2px dashed rgba(255,243,214,0.5);
+}
+
+.mixer-plus {
+  font-size: 28px;
+  color: var(--color-secondary);
+  font-weight: 700;
+}
+
+.mixer-dock {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 150px;
+  background: var(--color-navy);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 40px;
+  z-index: 3;
+}
+
+.mixer-playbtn {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: var(--color-secondary);
+  color: var(--color-navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.mixer-playbtn-active {
+  background: var(--color-accent);
+}
+
+.mixer-chips {
+  flex: 1;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  overflow-x: auto;
+  min-height: 56px;
+}
+
+.mixer-empty {
+  font-size: 13px;
+  color: rgba(255,243,214,0.5);
+}
+
+.mixer-chip {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #150070;
+  border-radius: 10px;
+  padding: 8px 14px;
+}
+
+.mixer-chip-icon {
+  width: 26px; height: 26px;
+  object-fit: contain;
+}
+
+.mixer-chip-name {
+  font-size: 12px;
+  color: var(--color-cream);
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.mixer-slider {
+  width: 90px;
+  accent-color: var(--color-accent);
+}
+
+.mixer-chip-pct {
+  font-size: 11px;
+  color: var(--color-nature);
+  width: 32px;
+}
+
+.mixer-chip-remove {
+  cursor: pointer;
+  color: rgba(255,243,214,0.6);
+  font-size: 15px;
+  padding: 0 2px;
+}
+
+.mixer-chip-remove:hover {
+  color: var(--color-secondary);
+}
