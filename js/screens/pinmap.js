@@ -29,8 +29,12 @@ function render(el, navigate) {
 
   L.control.attribution({ position: 'bottomright', prefix: false }).addTo(map);
 
-  requestAnimationFrame(() => map.invalidateSize());
-  setTimeout(() => map.invalidateSize(), 300);
+  // A fixed timeout can't cover every case (window resizes, orientation
+  // changes, or the container settling its layout at a different moment
+  // than expected) — watch the container itself and re-measure whenever
+  // its real rendered size changes.
+  const resizeObserver = new ResizeObserver(() => map.invalidateSize());
+  resizeObserver.observe(document.getElementById('pin-map-el'));
 
   const pinIcon = L.divIcon({
     className: 'pin-drop-icon',

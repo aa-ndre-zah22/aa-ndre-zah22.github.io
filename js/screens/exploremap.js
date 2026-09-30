@@ -35,11 +35,12 @@ function render(el, navigate) {
 
   L.control.attribution({ position: 'bottomright', prefix: false }).addTo(map);
 
-  // Container isn't at its final layout size the instant L.map() runs (screen
-  // transition/flex layout settles a frame or two later), so Leaflet's first
-  // size read is stale. Re-measure once layout has caught up.
-  requestAnimationFrame(() => map.invalidateSize());
-  setTimeout(() => map.invalidateSize(), 300);
+  // A fixed timeout can't cover every case (window resizes, orientation
+  // changes, or the container settling its layout at a different moment
+  // than expected) — watch the container itself and re-measure whenever
+  // its real rendered size changes.
+  const resizeObserver = new ResizeObserver(() => map.invalidateSize());
+  resizeObserver.observe(document.getElementById('explore-map-el'));
 
   CITIES.forEach((c) => {
     const icon = L.divIcon({

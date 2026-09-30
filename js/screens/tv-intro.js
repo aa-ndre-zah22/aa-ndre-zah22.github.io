@@ -65,6 +65,7 @@ function render(el, navigate) {
     staticTimer = null;
   }
   startStatic();
+  window.RingAudio.startGrainNoise();
 
   stage.addEventListener('mousemove', (e) => {
     cursor.style.left = e.clientX + 'px';
@@ -102,7 +103,8 @@ function render(el, navigate) {
 
   function turnOn() {
     stopStatic();
-    window.RingAudio.playChime();
+    window.RingAudio.stopGrainNoise();
+    window.RingAudio.playSurpriseTone();
     staticCanvas.style.opacity = '0';
     screenLogo.style.opacity = '1';
     hit.style.cursor = 'default';
@@ -118,7 +120,10 @@ function render(el, navigate) {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleTap(); }
   });
 
-  el._cleanup = stopStatic;
+  el._cleanup = function () {
+    stopStatic();
+    window.RingAudio.stopGrainNoise();
+  };
 }
 
 function onExit(el) {

@@ -108,6 +108,7 @@
   background: var(--color-navy);
   border-radius: 10px;
   padding: 12px 18px;
+  z-index: 1000;
 }
 
 .map-place-name {
@@ -126,6 +127,7 @@
 .map-pin-btn {
   position: absolute;
   bottom: 20px; right: 20px;
+  z-index: 1000;
 }
 
 .map-popup {
