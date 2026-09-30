@@ -1,15 +1,27 @@
-// Real Web Audio mixing engine. No recorded sound files exist yet, so each
-// sound is a small procedurally-generated loop standing in for the real
-// recording — swap `makeSource()`'s buffer/oscillator per sound id for a
-// loaded <AudioBufferSourceNode> from a real file later; everything else
-// (per-sound gain, master play/pause, volume sliders) stays the same.
+// Real Web Audio mixing engine, playing real recorded loops from assets/sounds/.
+// Each active sound gets its own GainNode (for the per-sound volume slider),
+// all routed into one masterGain (for global play/pause).
 
 window.SoundEngine = (function () {
 
 let ctx = null;
 let masterGain = null;
 let playing = false;
-const active = {}; // id -> { nodes: [...], gain: GainNode }
+const active = {}; // id -> { gain: GainNode, source: AudioBufferSourceNode|null }
+const bufferCache = {}; // id -> Promise<AudioBuffer>
+
+const SOUND_FILES = {
+  pinwheel: 'assets/sounds/pinwheel.wav',
+  phone:    'assets/sounds/phone.mp3',
+  tv:       'assets/sounds/tv.wav',
+  cloud:    'assets/sounds/cloud.mp3',
+  bell:     'assets/sounds/bell.mp3',
+  bird:     'assets/sounds/bird.wav',
+  cup:      'assets/sounds/cup.mp3',
+  bus:      'assets/sounds/bus.wav',
+  cricket:  'assets/sounds/cricket.mp3',
+  popper:   'assets/sounds/popper.wav',
+};
 
 function getCtx() {
   if (!ctx) {
@@ -21,115 +33,31 @@ function getCtx() {
   return ctx;
 }
 
-function noiseBuffer(c, seconds) {
-  const buf = c.createBuffer(1, c.sampleRate * seconds, c.sampleRate);
-  const data = buf.getChannelData(0);
-  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-  return buf;
+function loadBuffer(c, id) {
+  if (bufferCache[id]) return bufferCache[id];
+  const url = SOUND_FILES[id];
+  bufferCache[id] = fetch(url)
+    .then((r) => r.arrayBuffer())
+    .then((data) => c.decodeAudioData(data))
+    .catch((err) => {
+      console.warn('Could not load sound "' + id + '":', err.message);
+      delete bufferCache[id];
+      throw err;
+    });
+  return bufferCache[id];
 }
 
-// sound "recipes" — a rough sonic sketch per icon, until real audio lands
-const RECIPES = {
-  pinwheel:  { type: 'wind' },
-  phone:     { type: 'pulse', freq: 950, on: 0.15, off: 0.55 },
-  tv:        { type: 'noise-filtered', cutoff: 3200 },
-  cloud:     { type: 'wind', cutoff: 1800 },
-  bell:      { type: 'bell', freq: 880 },
-  bird:      { type: 'chirp' },
-  cup:       { type: 'crackle' },
-  bus:       { type: 'rumble', freq: 70 },
-  cricket:   { type: 'pulse', freq: 4200, on: 0.05, off: 0.18 },
-  popper:    { type: 'pop' },
-};
-
-function buildGraph(c, recipe, out) {
-  const nodes = [];
-  if (recipe.type === 'wind' || recipe.type === 'noise-filtered') {
+function startSource(c, id, entry) {
+  loadBuffer(c, id).then((buffer) => {
+    // The sound may have been removed or paused while the file was loading.
+    if (!active[id] || !playing) return;
     const src = c.createBufferSource();
-    src.buffer = noiseBuffer(c, 2);
+    src.buffer = buffer;
     src.loop = true;
-    const filter = c.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = recipe.cutoff || 900;
-    src.connect(filter).connect(out);
+    src.connect(entry.gain);
     src.start();
-    nodes.push(src);
-  } else if (recipe.type === 'rumble') {
-    const osc = c.createOscillator();
-    osc.type = 'sawtooth';
-    osc.frequency.value = recipe.freq;
-    const filter = c.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 220;
-    osc.connect(filter).connect(out);
-    osc.start();
-    nodes.push(osc);
-  } else if (recipe.type === 'bell') {
-    const loop = () => {
-      if (!active[recipe._id]) return;
-      const osc = c.createOscillator();
-      const g = c.createGain();
-      osc.type = 'triangle';
-      osc.frequency.value = recipe.freq;
-      g.gain.setValueAtTime(0.5, c.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 1.1);
-      osc.connect(g).connect(out);
-      osc.start();
-      osc.stop(c.currentTime + 1.1);
-      recipe._timer = setTimeout(loop, 1800);
-    };
-    recipe._loopFn = loop;
-    loop();
-  } else if (recipe.type === 'pulse') {
-    const loop = () => {
-      if (!active[recipe._id]) return;
-      const osc = c.createOscillator();
-      const g = c.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = recipe.freq;
-      g.gain.setValueAtTime(0.4, c.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + recipe.on);
-      osc.connect(g).connect(out);
-      osc.start();
-      osc.stop(c.currentTime + recipe.on);
-      recipe._timer = setTimeout(loop, (recipe.on + recipe.off) * 1000);
-    };
-    recipe._loopFn = loop;
-    loop();
-  } else if (recipe.type === 'chirp') {
-    const loop = () => {
-      if (!active[recipe._id]) return;
-      const osc = c.createOscillator();
-      const g = c.createGain();
-      osc.type = 'sine';
-      const base = 1800 + Math.random() * 900;
-      osc.frequency.setValueAtTime(base, c.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(base * 1.4, c.currentTime + 0.08);
-      g.gain.setValueAtTime(0.25, c.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.12);
-      osc.connect(g).connect(out);
-      osc.start();
-      osc.stop(c.currentTime + 0.12);
-      recipe._timer = setTimeout(loop, 400 + Math.random() * 900);
-    };
-    recipe._loopFn = loop;
-    loop();
-  } else if (recipe.type === 'crackle' || recipe.type === 'pop') {
-    const loop = () => {
-      if (!active[recipe._id]) return;
-      const src = c.createBufferSource();
-      src.buffer = noiseBuffer(c, 0.06);
-      const g = c.createGain();
-      g.gain.setValueAtTime(0.3, c.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.06);
-      src.connect(g).connect(out);
-      src.start();
-      recipe._timer = setTimeout(loop, recipe.type === 'pop' ? 1200 + Math.random() * 1500 : 150 + Math.random() * 250);
-    };
-    recipe._loopFn = loop;
-    loop();
-  }
-  return nodes;
+    entry.source = src;
+  }).catch(() => {});
 }
 
 function addSound(id, volumePercent) {
@@ -138,16 +66,14 @@ function addSound(id, volumePercent) {
   const gain = c.createGain();
   gain.gain.value = (volumePercent || 60) / 100;
   gain.connect(masterGain);
-  const recipe = Object.assign({ _id: id }, RECIPES[id] || { type: 'wind' });
-  active[id] = { gain, recipe, nodes: [] };
-  if (playing) active[id].nodes = buildGraph(c, recipe, gain);
+  active[id] = { gain, source: null };
+  if (playing) startSource(c, id, active[id]);
 }
 
 function removeSound(id) {
   const entry = active[id];
   if (!entry) return;
-  if (entry.recipe._timer) clearTimeout(entry.recipe._timer);
-  entry.nodes.forEach((n) => { try { n.stop(); } catch (e) {} });
+  if (entry.source) { try { entry.source.stop(); } catch (e) {} }
   entry.gain.disconnect();
   delete active[id];
 }
@@ -164,7 +90,7 @@ function play() {
   playing = true;
   Object.keys(active).forEach((id) => {
     const entry = active[id];
-    entry.nodes = buildGraph(c, entry.recipe, entry.gain);
+    if (!entry.source) startSource(c, id, entry);
   });
 }
 
@@ -172,9 +98,8 @@ function pause() {
   playing = false;
   Object.keys(active).forEach((id) => {
     const entry = active[id];
-    if (entry.recipe._timer) clearTimeout(entry.recipe._timer);
-    entry.nodes.forEach((n) => { try { n.stop(); } catch (e) {} });
-    entry.nodes = [];
+    if (entry.source) { try { entry.source.stop(); } catch (e) {} }
+    entry.source = null;
   });
 }
 

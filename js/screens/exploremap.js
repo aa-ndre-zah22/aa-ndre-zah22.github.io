@@ -1,13 +1,6 @@
 window.Screens = window.Screens || {};
 window.Screens.exploremap = (function () {
 
-const CITIES = [
-  { name: 'Mumbai', count: 120, size: 76, color: '#F47B35', lat: 19.076, lng: 72.8777 },
-  { name: 'Delhi', count: 84, size: 66, color: '#FFD23F', lat: 28.7041, lng: 77.1025 },
-  { name: 'Bengaluru', count: 62, size: 56, color: '#3D7EFF', lat: 12.9716, lng: 77.5946 },
-  { name: 'Kochi', count: 37, size: 44, color: '#FFF3D6', lat: 9.9312, lng: 76.2673 },
-];
-
 function render(el, navigate) {
   el.innerHTML = `
     <img class="nav-logo" src="assets/logo.svg" alt="Ring a Bell" />
@@ -22,7 +15,6 @@ function render(el, navigate) {
     <div class="map-search" style="top:24px;left:56px;right:56px;">
       <span>&#128269;</span> Pick a place. Any place. We won't judge your search history.
     </div>
-    <div class="save-step" style="bottom:24px;top:auto;">09 / 11 &mdash; explore the map</div>
   `;
 
   const map = L.map('explore-map-el', { zoomControl: true, attributionControl: false })
@@ -42,18 +34,27 @@ function render(el, navigate) {
   const resizeObserver = new ResizeObserver(() => map.invalidateSize());
   resizeObserver.observe(document.getElementById('explore-map-el'));
 
-  CITIES.forEach((c) => {
-    const icon = L.divIcon({
-      className: 'explore-city-icon',
-      html: `
-        <div class="explore-city-bubble" style="width:${c.size}px;height:${c.size}px;background:${c.color};">${c.count}</div>
-        <div class="explore-city-name">${c.name}</div>
-      `,
-      iconSize: [c.size, c.size + 24],
-      iconAnchor: [c.size / 2, c.size / 2],
-    });
-    L.marker([c.lat, c.lng], { icon }).addTo(map).on('click', () => navigate('memorypin'));
+  const pinIcon = L.divIcon({
+    className: 'pin-drop-icon',
+    html: '&#128205;',
+    iconSize: [40, 40],
+    iconAnchor: [20, 38],
   });
+
+  window.db.collection('memories').limit(200).get()
+    .then((snapshot) => {
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        if (typeof data.lat !== 'number' || typeof data.lng !== 'number') return;
+        L.marker([data.lat, data.lng], { icon: pinIcon }).addTo(map).on('click', () => {
+          window.AppState.savedMemory = Object.assign({ id: doc.id }, data);
+          navigate('memorypin');
+        });
+      });
+    })
+    .catch((err) => {
+      console.warn('Could not load pinned memories from Firestore:', err.message);
+    });
 }
 
 return { render };

@@ -11,8 +11,6 @@ function render(el, navigate) {
   el.innerHTML = `
     <img class="backdrop" src="assets/backdrop.svg" alt="" />
     <img class="nav-logo" src="assets/logo.svg" alt="Ring a Bell" />
-    <div class="save-step">10 / 11 &mdash; search</div>
-
     <div class="search-bar">
       <span>&#128269;</span>
       <input id="search-input" placeholder="school bell" />

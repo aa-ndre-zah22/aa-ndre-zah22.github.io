@@ -1,6 +1,8 @@
 window.Screens = window.Screens || {};
 window.Screens.signin = (function () {
 
+const EMAIL_STORAGE_KEY = 'ringABellPendingEmail';
+
 function render(el, navigate) {
   el.innerHTML = `
     <img class="backdrop" src="assets/backdrop.svg" alt="" />
@@ -26,6 +28,18 @@ function render(el, navigate) {
 
   const emailInput = el.querySelector('#signin-email');
   const errorMsg = el.querySelector('#signin-error');
+  const continueBtn = el.querySelector('#btn-continue');
+  const card = el.querySelector('.signin-card');
+
+  function showSentState(email) {
+    card.innerHTML = `
+      <button class="signin-close" id="signin-close" aria-label="Close">&times;</button>
+      <h1>Check your inbox.</h1>
+      <p class="signin-sub">We just sent a real sign-in link to <strong>${email}</strong>. Open it on this device to finish signing in.</p>
+      <p class="signin-fine">Didn't get it? Check spam, or close this and try again with a different email.</p>
+    `;
+    el.querySelector('#signin-close').addEventListener('click', () => navigate('landing'));
+  }
 
   function tryContinue() {
     const val = emailInput.value.trim();
@@ -36,7 +50,24 @@ function render(el, navigate) {
       return;
     }
     errorMsg.textContent = '';
-    navigate('mixer');
+    continueBtn.disabled = true;
+    continueBtn.textContent = 'Sending...';
+
+    const actionCodeSettings = {
+      url: window.location.origin + window.location.pathname + '#signin',
+      handleCodeInApp: true,
+    };
+
+    window.auth.sendSignInLinkToEmail(val, actionCodeSettings)
+      .then(() => {
+        window.localStorage.setItem(EMAIL_STORAGE_KEY, val);
+        showSentState(val);
+      })
+      .catch((err) => {
+        continueBtn.disabled = false;
+        continueBtn.textContent = 'Continue';
+        errorMsg.textContent = err.message || 'Something went wrong sending that link.';
+      });
   }
 
   el.querySelector('#signin-close').addEventListener('click', () => navigate('landing'));
@@ -44,5 +75,29 @@ function render(el, navigate) {
   emailInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryContinue(); });
 }
 
-return { render };
+// Called once at startup (see main.js) to complete sign-in if the user
+// arrived by clicking the magic link from their email.
+function completeSignInIfNeeded(onSignedIn) {
+  if (!window.auth.isSignInWithEmailLink(window.location.href)) return;
+
+  let email = window.localStorage.getItem(EMAIL_STORAGE_KEY);
+  if (!email) {
+    email = window.prompt('Confirm the email you signed in with:');
+  }
+  if (!email) return;
+
+  window.auth.signInWithEmailLink(email, window.location.href)
+    .then(() => {
+      window.localStorage.removeItem(EMAIL_STORAGE_KEY);
+      // Strip the one-time oobCode/apiKey query params Firebase appended
+      // to the link before the router adds its own #screen fragment back.
+      window.history.replaceState(null, '', window.location.origin + window.location.pathname);
+      if (onSignedIn) onSignedIn();
+    })
+    .catch((err) => {
+      console.warn('Email link sign-in failed:', err.message);
+    });
+}
+
+return { render, completeSignInIfNeeded };
 })();

@@ -8,8 +8,6 @@ function render(el, navigate) {
   el.innerHTML = `
     <img class="backdrop" src="assets/backdrop.svg" alt="" />
     <img class="nav-logo" src="assets/logo.svg" alt="Ring a Bell" />
-    <div class="save-step">05 / 11 &mdash; save it</div>
-
     <div class="save-layout">
       <div class="save-preview">
         <div class="save-preview-art"></div>

@@ -140,6 +140,7 @@
   padding: 20px;
   box-shadow: var(--shadow-card);
   color: var(--color-text);
+  z-index: 1000;
 }
 
 .map-popup-row {

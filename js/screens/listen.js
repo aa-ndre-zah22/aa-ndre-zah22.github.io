@@ -7,8 +7,6 @@ function render(el, navigate) {
   el.innerHTML = `
     <img class="backdrop" src="assets/backdrop.svg" alt="" />
     <img class="nav-logo" src="assets/logo.svg" alt="Ring a Bell" />
-    <div class="listen-step">03 / 11 &mdash; take a listen</div>
-
     <h1 class="listen-title">Your Memory Soundscape</h1>
     <p class="listen-sub">Take a sec. Let it hit you. (Deep breath &mdash; this one's a doozy.)</p>
 

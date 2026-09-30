@@ -7,8 +7,6 @@ function render(el, navigate) {
   el.innerHTML = `
     <img class="backdrop" src="assets/backdrop.svg" alt="" />
     <img class="nav-logo" src="assets/logo.svg" alt="Ring a Bell" />
-    <div class="save-step">11 / 11 &mdash; profile</div>
-
     <div class="profile-header">
       <div class="profile-avatar"></div>
       <div>

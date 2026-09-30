@@ -4,7 +4,6 @@ window.Screens.pinmap = (function () {
 function render(el, navigate) {
   el.innerHTML = `
     <img class="nav-logo" src="assets/logo.svg" alt="Ring a Bell" />
-    <div class="save-step">06 / 11 &mdash; pin it down</div>
     <h1 class="draw-title">Where did this happen?</h1>
     <p class="draw-sub">X marks the spot. Literally.</p>
 
@@ -102,7 +101,36 @@ function render(el, navigate) {
     }, 400);
   });
 
-  el.querySelector('#map-pin-confirm').addEventListener('click', () => navigate('memorypin'));
+  const confirmBtn = el.querySelector('#map-pin-confirm');
+  confirmBtn.addEventListener('click', () => {
+    const latlng = marker.getLatLng();
+    const memory = Object.assign({}, window.AppState.savedMemory, {
+      placeName: placeName.textContent,
+      placeSub: placeSub.textContent,
+      lat: latlng.lat,
+      lng: latlng.lng,
+      authorEmail: (window.AppState.user && window.AppState.user.email) || 'anonymous',
+    });
+
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Pinning...';
+
+    window.db.collection('memories').add(Object.assign({}, memory, {
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }))
+      .then((docRef) => {
+        memory.id = docRef.id;
+        window.AppState.savedMemory = memory;
+        navigate('memorypin');
+      })
+      .catch((err) => {
+        console.warn('Could not save memory to Firestore:', err.message);
+        // Still let the user see their own pin locally even if the write failed
+        // (e.g. offline, or Firestore rules not yet configured for this project).
+        window.AppState.savedMemory = memory;
+        navigate('memorypin');
+      });
+  });
 }
 
 return { render };

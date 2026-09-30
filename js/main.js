@@ -16,4 +16,8 @@
 
   var startAt = window.location.hash.replace('#', '') || 'tv-intro';
   Router.navigate(startAt);
+
+  window.Screens.signin.completeSignInIfNeeded(function () {
+    Router.navigate('mixer');
+  });
 })();

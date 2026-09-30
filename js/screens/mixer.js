@@ -9,8 +9,6 @@ function render(el, navigate) {
   el.innerHTML = `
     <img class="backdrop" src="assets/backdrop.svg" alt="" />
     <img class="nav-logo" src="assets/logo.svg" alt="Ring a Bell" />
-    <div class="mixer-step">02 / 11 &mdash; build your mix</div>
-
     <h1 class="mixer-title">Build your childhood sound</h1>
     <p class="mixer-sub">10 sounds so far &mdash; tap one to drop it on the deck. More on the way.</p>
 

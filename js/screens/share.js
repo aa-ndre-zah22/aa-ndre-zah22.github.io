@@ -6,7 +6,6 @@ function render(el, navigate) {
   el.innerHTML = `
     <img class="backdrop" src="assets/backdrop.svg" alt="" />
     <img class="nav-logo" src="assets/logo.svg" alt="Ring a Bell" />
-    <div class="save-step">08 / 11 &mdash; go flex it</div>
 
     <div class="share-layout">
       <div class="share-copy">
@@ -24,7 +23,7 @@ function render(el, navigate) {
       <div class="share-card">
         <div class="share-kicker">WHAT DID YOUR CHILDHOOD SOUND LIKE?</div>
         <div class="share-title">${memory.title}</div>
-        <div class="share-sub">&#128205; St. Mary's School</div>
+        <div class="share-sub">&#128205; ${memory.placeSub || memory.placeName || 'Unknown location'}</div>
         <div class="share-art"></div>
         <div class="share-listen">&#9658; Listen to my memory</div>
         <div class="share-cta">Remember something from this place? &rarr;</div>

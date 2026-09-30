@@ -8,8 +8,6 @@ function render(el, navigate) {
   el.innerHTML = `
     <img class="backdrop" src="assets/backdrop.svg" alt="" />
     <img class="nav-logo" src="assets/logo.svg" alt="Ring a Bell" />
-    <div class="draw-step">04 / 11 &mdash; draw &amp; decorate</div>
-
     <h1 class="draw-title">Now... what does that sound look like?</h1>
     <p class="draw-sub">Draw it, sticker it, scribble on it. Stick figures encouraged. We don't grade this.</p>
 

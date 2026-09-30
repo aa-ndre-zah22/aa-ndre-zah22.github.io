@@ -109,5 +109,5 @@
   transform: translateX(-50%);
   display: flex;
   gap: 16px;
-  z-index: 2;
+  z-index: 1000;
 }

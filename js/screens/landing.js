@@ -9,7 +9,7 @@ function render(el, navigate) {
     <nav class="nav">
       <div></div>
       <div class="nav-links">
-        <span>MAP</span>
+        <span id="nav-map" style="cursor:pointer;">MAP</span>
         <span>ABOUT</span>
         <span id="nav-signin" class="nav-signin">SIGN IN</span>
       </div>
@@ -42,7 +42,8 @@ function render(el, navigate) {
   const goSignIn = () => navigate('signin');
   el.querySelector('#nav-signin').addEventListener('click', goSignIn);
   el.querySelector('#btn-build').addEventListener('click', goSignIn);
-  el.querySelector('#btn-surf').addEventListener('click', () => navigate('landing')); // stub: map screen not built yet
+  el.querySelector('#btn-surf').addEventListener('click', () => navigate('exploremap'));
+  el.querySelector('#nav-map').addEventListener('click', () => navigate('exploremap'));
 }
 
 return { render };
