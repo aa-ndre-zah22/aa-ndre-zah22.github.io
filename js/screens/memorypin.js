@@ -20,6 +20,10 @@ function render(el, navigate) {
           </div>
         </div>
         <p class="map-popup-body">by Ann &middot; just now &middot; ${memory.note || 'a new memory, freshly pinned.'}</p>
+        <div class="map-popup-drawing" id="popup-drawing-wrap" style="display:none;">
+          <img id="popup-drawing-img" alt="Drawing of this memory" style="width:100%;border-radius:8px;display:block;" />
+        </div>
+        <div class="map-popup-comments" id="popup-comments"></div>
         <button class="btn btn-primary map-popup-btn" id="popup-remember">&#10084; I REMEMBER THIS TOO</button>
       </div>
     </div>
@@ -50,7 +54,53 @@ function render(el, navigate) {
 
   el.querySelector('#popup-explore').addEventListener('click', () => navigate('exploremap'));
   el.querySelector('#popup-share').addEventListener('click', () => navigate('share'));
+
+  const rememberBtn = el.querySelector('#popup-remember');
+  if (!memory.id) {
+    rememberBtn.disabled = true;
+    rememberBtn.title = 'This memory isn\'t saved yet.';
+  } else {
+    rememberBtn.addEventListener('click', () => {
+      window.AppState.remixMemoryId = memory.id;
+      navigate('draw');
+    });
+
+    const drawingWrap = el.querySelector('#popup-drawing-wrap');
+    const drawingImg = el.querySelector('#popup-drawing-img');
+    window.db.collection('memories').doc(memory.id).collection('drawings')
+      .orderBy('createdAt', 'desc').limit(1).get()
+      .then((snap) => {
+        if (!snap.empty) {
+          drawingImg.src = snap.docs[0].data().dataUrl;
+          drawingWrap.style.display = 'block';
+        }
+      })
+      .catch(() => {});
+
+    const commentsBox = el.querySelector('#popup-comments');
+    window.db.collection('memories').doc(memory.id).collection('comments')
+      .orderBy('createdAt', 'asc').limit(20).get()
+      .then((snap) => {
+        if (snap.empty) return;
+        commentsBox.innerHTML = snap.docs.map((d) => {
+          const c = d.data();
+          const who = (c.authorEmail || 'someone').split('@')[0];
+          return `<p class="map-popup-comment"><strong>${who}</strong> ${c.text || ''}</p>`;
+        }).join('');
+      })
+      .catch(() => {});
+  }
 }
 
-return { render };
+// Re-entering after a remix (new drawing layer / comment) needs a full
+// rebuild to show the update — see the matching note in draw.js.
+function onEnter(el, navigate) {
+  if (el._enteredBefore) {
+    render(el, navigate);
+  } else {
+    el._enteredBefore = true;
+  }
+}
+
+return { render, onEnter };
 })();

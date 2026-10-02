@@ -134,13 +134,41 @@
   position: absolute;
   left: 50%; top: 40%;
   transform: translate(-30%, -40%);
-  width: 320px;
+  width: 380px;
+  max-height: 80vh;
+  overflow-y: auto;
   background: var(--color-cream);
   border-radius: 14px;
   padding: 20px;
   box-shadow: var(--shadow-card);
   color: var(--color-text);
   z-index: 1000;
+}
+
+.map-popup-drawing {
+  margin: 10px 0;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.map-popup-comments {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.map-popup-comment {
+  font-size: 12px;
+  background: rgba(0,0,0,0.04);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.map-popup-comment strong {
+  color: var(--color-navy);
+  text-transform: capitalize;
 }
 
 .map-popup-row {

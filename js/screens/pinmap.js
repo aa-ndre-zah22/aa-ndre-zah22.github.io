@@ -121,6 +121,14 @@ function render(el, navigate) {
       .then((docRef) => {
         memory.id = docRef.id;
         window.AppState.savedMemory = memory;
+        if (window.AppState.pendingDrawingDataUrl) {
+          docRef.collection('drawings').add({
+            dataUrl: window.AppState.pendingDrawingDataUrl,
+            authorEmail: memory.authorEmail,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          }).catch(() => {});
+          window.AppState.pendingDrawingDataUrl = null;
+        }
         navigate('memorypin');
       })
       .catch((err) => {

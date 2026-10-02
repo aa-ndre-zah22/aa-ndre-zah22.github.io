@@ -62,6 +62,7 @@ html, body {
   top: 14px;
   right: 48px;
   z-index: 6;
+  cursor: pointer;
 }
 
 button {

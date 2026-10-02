@@ -43,5 +43,11 @@ window.addEventListener('popstate', () => {
   if (name && screens.has(name) && (!current || current.name !== name)) navigate(name);
 });
 
+// The logo appears on every screen but nothing made it clickable — wire it
+// once here (event delegation) instead of touching every screen file.
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.nav-logo')) navigate('landing');
+});
+
 return { registerScreen, navigate };
 })();

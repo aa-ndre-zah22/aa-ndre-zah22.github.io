@@ -5,11 +5,13 @@ const COLORS = ['#382A26', '#3D7EFF', '#F47B35', '#7657C8'];
 const CANVAS_W = 620, CANVAS_H = 460;
 
 function render(el, navigate) {
+  const remixId = window.AppState.remixMemoryId || null;
+
   el.innerHTML = `
     <img class="backdrop" src="assets/backdrop.svg" alt="" />
     <img class="nav-logo" src="assets/logo.svg" alt="Ring a Bell" />
-    <h1 class="draw-title">Now... what does that sound look like?</h1>
-    <p class="draw-sub">Draw it, sticker it, scribble on it. Stick figures encouraged. We don't grade this.</p>
+    <h1 class="draw-title">${remixId ? 'Add to this memory' : 'Now... what does that sound look like?'}</h1>
+    <p class="draw-sub">${remixId ? 'Scribble on top of what\'s already there. Yours stacks on theirs.' : 'Draw it, sticker it, scribble on it. Stick figures encouraged. We don\'t grade this.'}</p>
 
     <div class="draw-layout">
       <div class="draw-tools">
@@ -37,8 +39,8 @@ function render(el, navigate) {
     </div>
 
     <div class="draw-actions">
-      <button class="btn btn-outline" id="draw-clear">CLEAR PAGE</button>
-      <button class="btn btn-accent" id="draw-save">SAVE IT &rarr;</button>
+      ${remixId ? '' : '<button class="btn btn-outline" id="draw-clear">CLEAR PAGE</button>'}
+      <button class="btn btn-accent" id="draw-save">${remixId ? 'ADD MY LAYER →' : 'SAVE IT →'}</button>
     </div>
   `;
 
@@ -50,9 +52,7 @@ function render(el, navigate) {
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
-  let tool = 'pencil';
-  let color = COLORS[0];
-  let drawing = false;
+  let baseLoaded = !remixId;
   let history = [ctx.getImageData(0, 0, CANVAS_W, CANVAS_H)];
   let historyIndex = 0;
 
@@ -60,6 +60,27 @@ function render(el, navigate) {
     history = history.slice(0, historyIndex + 1);
     history.push(ctx.getImageData(0, 0, CANVAS_W, CANVAS_H));
     historyIndex = history.length - 1;
+  }
+
+  if (remixId) {
+    window.db.collection('memories').doc(remixId).collection('drawings')
+      .orderBy('createdAt', 'desc').limit(1).get()
+      .then((snap) => {
+        if (!snap.empty) {
+          const dataUrl = snap.docs[0].data().dataUrl;
+          const img = new Image();
+          img.onload = () => {
+            ctx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
+            history = [ctx.getImageData(0, 0, CANVAS_W, CANVAS_H)];
+            historyIndex = 0;
+            baseLoaded = true;
+          };
+          img.src = dataUrl;
+        } else {
+          baseLoaded = true;
+        }
+      })
+      .catch(() => { baseLoaded = true; });
   }
 
   function restoreHistory() {
@@ -71,7 +92,12 @@ function render(el, navigate) {
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   }
 
+  let tool = 'pencil';
+  let color = COLORS[0];
+  let drawing = false;
+
   canvas.addEventListener('mousedown', (e) => {
+    if (!baseLoaded) return;
     drawing = true;
     const p = pos(e);
     ctx.beginPath();
@@ -111,12 +137,15 @@ function render(el, navigate) {
   el.querySelector('#draw-redo').addEventListener('click', () => {
     if (historyIndex < history.length - 1) { historyIndex++; restoreHistory(); }
   });
-  el.querySelector('#draw-clear').addEventListener('click', () => {
-    ctx.fillStyle = '#FFF3D6';
-    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-    pushHistory();
-    overlay.innerHTML = '';
-  });
+  const clearBtn = el.querySelector('#draw-clear');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      ctx.fillStyle = '#FFF3D6';
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      pushHistory();
+      overlay.innerHTML = '';
+    });
+  }
 
   // stickers — draggable, from the same 10-icon set
   const stickerRow = el.querySelector('#draw-stickers');
@@ -174,8 +203,89 @@ function render(el, navigate) {
     }
   });
 
-  el.querySelector('#draw-save').addEventListener('click', () => navigate('save'));
+  // Bakes the canvas strokes plus every placed sticker/note in the overlay
+  // into one flat image, since Firestore stores a drawing as a single PNG,
+  // not as separate editable layers.
+  function flattenToDataUrl() {
+    const out = document.createElement('canvas');
+    out.width = CANVAS_W; out.height = CANVAS_H;
+    const octx = out.getContext('2d');
+    octx.drawImage(canvas, 0, 0);
+    Array.from(overlay.children).forEach((node) => {
+      const x = parseFloat(node.style.left) || 0;
+      const y = parseFloat(node.style.top) || 0;
+      if (node.tagName === 'IMG') {
+        octx.drawImage(node, x, y, 56, 56);
+      } else {
+        octx.font = "18px 'Kalam', cursive";
+        octx.fillStyle = '#3A342C';
+        octx.fillText(node.textContent, x, y + 18);
+      }
+    });
+    return out.toDataURL('image/png');
+  }
+
+  function showCommentPrompt(memoryId) {
+    const wrap = document.createElement('div');
+    wrap.className = 'signin-card';
+    wrap.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2000;width:420px;';
+    wrap.innerHTML = `
+      <h1 style="font-size:20px;">Say something about it?</h1>
+      <p class="signin-sub">Optional — goes right under the memory.</p>
+      <textarea id="remix-comment" class="save-input save-textarea" maxlength="180" placeholder="wait, I remember this too..."></textarea>
+      <button class="signin-btn signin-btn-dark" id="remix-comment-post" style="margin-top:12px;">Post &amp; go back</button>
+    `;
+    document.body.appendChild(wrap);
+    const post = () => {
+      const text = wrap.querySelector('#remix-comment').value.trim();
+      const done = () => {
+        wrap.remove();
+        window.AppState.remixMemoryId = null;
+        navigate('memorypin');
+      };
+      if (!text) { done(); return; }
+      window.db.collection('memories').doc(memoryId).collection('comments').add({
+        text,
+        authorEmail: (window.AppState.user && window.AppState.user.email) || 'anonymous',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }).then(done).catch(done);
+    };
+    wrap.querySelector('#remix-comment-post').addEventListener('click', post);
+  }
+
+  el.querySelector('#draw-save').addEventListener('click', () => {
+    const dataUrl = flattenToDataUrl();
+    if (remixId) {
+      const saveBtn = el.querySelector('#draw-save');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+      window.db.collection('memories').doc(remixId).collection('drawings').add({
+        dataUrl,
+        authorEmail: (window.AppState.user && window.AppState.user.email) || 'anonymous',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      })
+        .then(() => showCommentPrompt(remixId))
+        .catch(() => showCommentPrompt(remixId));
+    } else {
+      window.AppState.pendingDrawingDataUrl = dataUrl;
+      navigate('save');
+    }
+  });
 }
 
-return { render };
+// The router calls render() only the first time this screen is created,
+// then calls onEnter() on every visit after that (including that very
+// first one, right after render()). This screen's content depends on
+// remixMemoryId, which can differ on each visit, so re-entries need a full
+// rebuild — but the router's first-visit onEnter call must be a no-op, or
+// render() would run twice back to back.
+function onEnter(el, navigate) {
+  if (el._enteredBefore) {
+    render(el, navigate);
+  } else {
+    el._enteredBefore = true;
+  }
+}
+
+return { render, onEnter };
 })();
